@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('Ver Marca')">
+    <title>Ver Marca</title>
+</head>
+<body>
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<div class="container mt-4">
+    <h2>Detalle de Marca</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 th:text="${marca.nombre}">Nombre de la Marca</h3>
+        </div>
+        <div class="card-body">
+            <p class="card-text"><strong>ID:</strong> <span th:text="${marca.id}"></span></p>
+            <p class="card-text"><strong>Nombre:</strong> <span th:text="${marca.nombre}"></span></p>
+            <p class="card-text"><strong>Precio:</strong> <span th:text="${marca.precio}"></span></p>
+        </div>
+        <div class="card-footer">
+            <a th:href="@{/marcas/edit/{id}(id=${marca.id})}" class="btn btn-warning">Editar</a>
+            <a th:href="@{/marcas/delete/{id}(id=${marca.id})}" class="btn btn-danger"
+               onclick="return confirm('¿Estás seguro de que deseas eliminar esta marca?')">Eliminar</a>
+            <a th:href="@{/marcas}" class="btn btn-secondary">Volver a la Lista</a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

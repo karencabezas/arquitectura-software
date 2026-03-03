@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('Lista de Marcas')">
+    <title>Lista de Marcas</title>
+</head>
+<body>
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<div class="container mt-4">
+    <h2>Lista de Marcas</h2>
+
+    <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <a th:href="@{/marcas/new}" class="btn btn-primary mb-3">Agregar Nueva Marca</a>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="marca : ${marcas}">
+                <td th:text="${marca.id}"></td>
+                <td th:text="${marca.nombre}"></td>
+                <td th:text="${'$' + marca.precio}"></td>
+                <td>
+                    <a th:href="@{/marcas/view/{id}(id=${marca.id})}" class="btn btn-info btn-sm">Ver</a>
+                    <a th:href="@{/marcas/edit/{id}(id=${marca.id})}" class="btn btn-warning btn-sm">Editar</a>
+                    <a th:href="@{/marcas/delete/{id}(id=${marca.id})}" class="btn btn-danger btn-sm"
+                       onclick="return confirm('¿Estás seguro de que deseas eliminar esta marca?')">Eliminar</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(marcas)}">
+                <td colspan="4" class="text-center">No se encontraron marcas</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

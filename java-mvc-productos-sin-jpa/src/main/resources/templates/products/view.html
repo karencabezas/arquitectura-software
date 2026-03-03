@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('View Product')">
+    <title>View Product</title>
+</head>
+<body>
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<div class="container mt-4">
+    <h2>Product Details</h2>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 th:text="${product.nombre}">Product Name</h3>
+        </div>
+        <div class="card-body">
+            <p class="card-text"><strong>ID:</strong> <span th:text="${product.id}"></span></p>
+            <p class="card-text"><strong>Description:</strong> <span th:text="${product.descripcion}"></span></p>
+            <p class="card-text"><strong>Price:</strong> <span th:text="${'$' + product.precio}"></span></p>
+            <p class="card-text"><strong>Stock:</strong> <span th:text="${product.stock}"></span></p>
+        </div>
+        <div class="card-footer">
+            <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-warning">Edit</a>
+            <a th:href="@{/products/delete/{id}(id=${product.id})}" class="btn btn-danger"
+               onclick="return confirm('Are you sure you want to delete this product?')">Delete</a>
+            <a th:href="@{/products}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

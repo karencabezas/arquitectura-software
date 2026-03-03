@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Listado de Productos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Catálogo de Productos</h1>
+
+    <!-- Mensaje de feedback -->
+    <div class="alert alert-success" th:if="${mensaje}" th:text="${mensaje}"></div>
+
+    <!-- Formulario de búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form th:action="@{/productos/buscar}" method="get" class="d-flex">
+                <input type="text" name="nombre" class="form-control me-2"
+                       placeholder="Buscar por nombre..." th:value="${nombreBusqueda}">
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <a th:href="@{/marcas}" class="btn btn-outline-secondary me-2">Ver Marcas</a>
+            <a th:href="@{/productos/nuevo}" class="btn btn-primary">Nuevo Producto</a>
+        </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${productos.empty}">
+            <td colspan="6" class="text-center">No hay productos disponibles</td>
+        </tr>
+        <tr th:each="producto : ${productos}">
+            <td th:text="${producto.id}"></td>
+            <td th:text="${producto.nombre}"></td>
+            <td th:text="${producto.descripcion}"></td>
+            <td th:text="${'$' + producto.precio}"></td>
+            <td th:text="${producto.cantidad}"></td>
+            <td>
+                <a th:href="@{/productos/editar/{id}(id=${producto.id})}" class="btn btn-sm btn-warning">Editar</a>
+                <a th:href="@{/productos/eliminar/{id}(id=${producto.id})}" class="btn btn-sm btn-danger"
+                   onclick="return confirm('¿Estás seguro de eliminar este producto?')">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

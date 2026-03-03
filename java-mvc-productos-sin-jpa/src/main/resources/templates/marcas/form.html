@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head(${marca.id == null ? 'Crear Marca' : 'Editar Marca'})">
+    <title>Formulario de Marca</title>
+</head>
+<body>
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<div class="container mt-4">
+    <h2 th:text="${marca.id == null ? 'Crear Nueva Marca' : 'Editar Marca'}">Formulario de Marca</h2>
+
+    <form th:if="${marca.id == null}" th:action="@{/marcas}" th:object="${marca}" method="post">
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+        </div>
+        <div class="mb-3">
+            <label for="precio" class="form-label">Precio</label>
+            <input type="text" class="form-control" id="precio" th:field="*{precio}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar Marca</button>
+        <a th:href="@{/marcas}" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+    <form th:if="${marca.id != null}" th:action="@{/marcas/update}" th:object="${marca}" method="post">
+        <input type="hidden" th:field="*{id}">
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" th:field="*{nombre}" required>
+        </div>
+        <div class="mb-3">
+            <label for="precio" class="form-label">Precio</label>
+            <input type="text" class="form-control" id="precio" th:field="*{precio}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Actualizar Marca</button>
+        <a th:href="@{/marcas}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

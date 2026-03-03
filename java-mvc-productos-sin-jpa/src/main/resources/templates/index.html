@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head('Home - Product Management')">
+    <title>Home</title>
+</head>
+<body>
+<nav th:replace="fragments/layout :: navbar"></nav>
+
+<div class="container mt-4">
+    <div class="jumbotron">
+        <h1 class="display-4">Product Management System</h1>
+        <p class="lead">A Spring Boot MVC demo application without JPA for managing products.</p>
+        <hr class="my-4">
+        <p>Use this application to create, read, update, and delete products in the database.</p>
+        <a class="btn btn-primary btn-lg" th:href="@{/products}" role="button">View Products</a>
+        <a class="btn btn-success btn-lg" th:href="@{/products/new}" role="button">Add New Product</a>
+        <a class="btn btn-primary btn-lg" th:href="@{/marcas}" role="button">View Marcas</a>
+        <a class="btn btn-success btn-lg" th:href="@{/marcas/new}" role="button">Add New Marca</a>
+    </div>
+</div>
+
+<footer th:replace="fragments/layout :: footer"></footer>
+</body>
+</html>

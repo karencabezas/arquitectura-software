@@ -1,0 +1,56 @@
+/* Custom styles for Product Management application */
+
+body {
+    padding-bottom: 60px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.jumbotron {
+    padding: 2rem;
+    background-color: #e9ecef;
+    border-radius: 0.3rem;
+    margin-bottom: 2rem;
+}
+
+.table-responsive {
+    margin-top: 20px;
+}
+
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+/* Add some spacing to buttons in a row */
+.btn + .btn {
+    margin-left: 5px;
+}
+
+/* Custom color for price display */
+.price {
+    color: #198754;
+    font-weight: bold;
+}
+
+/* Custom style for low stock warning */
+.low-stock {
+    color: #dc3545;
+}
