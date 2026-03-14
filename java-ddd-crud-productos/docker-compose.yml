@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Servicio de la aplicación
+  app:
+    build: .
+    container_name: productos-api
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/productos_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    ports:
+      - "8080:8080"
+    networks:
+      - productos-network
+    # Reiniciar el contenedor si falla
+    restart: always
+    # Esperar a que la base de datos esté lista
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=productos_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - productos-network
+    # Reiniciar el contenedor si falla
+    restart: always
+    # Configuración para mejor rendimiento
+    command: postgres -c max_connections=100 -c shared_buffers=128MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servicio PgAdmin para administrar la base de datos (opcional)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - productos-network
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    # Reiniciar el contenedor si falla
+    restart: always
+
+# Volúmenes para persistir datos
+volumes:
+  postgres-data:
+    driver: local
+  pgadmin-data:
+    driver: local
+
+# Red para comunicación entre servicios
+networks:
+  productos-network:
+    driver: bridge
