@@ -1,28 +1,44 @@
-# Instrucciones finales para probar la aplicación Kafka
+# 📦 Proyecto Kafka Demo - Productor y Consumidor
 
-# 1. Detener todos los contenedores
+## 🚀 Despliegue
+
+### Prerrequisitos
+- Docker
+- Docker Compose
+
+### Pasos
+
+1. Detener contenedores:
 docker-compose down -v
 
-# 2. Asegurarse de eliminar los volúmenes y redes antiguos
+2. Limpiar recursos:
 docker system prune -f
 docker volume prune -f
 
-# 3. Levantar todos los servicios
+3. Levantar servicios:
 docker-compose up -d
-docker-compose down -v 
-# 4. Esperar a que todos los servicios estén activos (importante!)
-# Verificar el estado con:
+
+4. Verificar estado:
 docker-compose ps
 
-# 5. Para enviar mensajes como productor:
-docker attach kafka-producer
-# (escribe mensajes y presiona Enter, usa 'exit' para salir)
+---
 
-# 6. Para ver los mensajes recibidos por el consumidor (en otra terminal):
+## 🧪 Uso
+
+### Productor
+docker attach kafka-producer
+
+Selecciona el tópico y envía mensajes.
+
+### Consumidor
 docker logs -f kafka-consumer
 
-# 7. Para ver la interfaz gráfica de Kafka:
-# Abre en el navegador: http://localhost:8080
+---
 
-# 8. Al terminar, para detener todos los servicios:
+## 🌐 UI Kafka
+http://localhost:8080
+
+---
+
+## 🛑 Detener
 docker-compose down
