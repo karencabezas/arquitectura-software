@@ -1,0 +1,32 @@
+package com.authapp.domain.model;
+
+/**
+ * Entidad de dominio pura.
+ * Un Permiso representa una capacidad atómica sobre un recurso (ABAC).
+ * Ejemplos: PRODUCT_INSERT, PRODUCT_DELETE
+ */
+public class Permiso {
+
+    private Long id;
+    private String nombre;
+    private String descripcion;
+
+    public Permiso() {}
+
+    public Permiso(Long id, String nombre, String descripcion) {
+        this.id          = id;
+        this.nombre      = nombre;
+        this.descripcion = descripcion;
+    }
+
+    // ── Getters y Setters ──
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+}
