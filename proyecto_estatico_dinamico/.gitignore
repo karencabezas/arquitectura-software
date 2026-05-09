@@ -1,0 +1,22 @@
+# Maven
+backend/target/
+backend/*.jar
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Node / Angular (para cuando agregues el frontend)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Environment
+.env
+
+# OS
+.DS_Store
+Thumbs.db
