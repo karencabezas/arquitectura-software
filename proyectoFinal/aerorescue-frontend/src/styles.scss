@@ -1,0 +1,19 @@
+/* Angular Material prebuilt theme — no custom SCSS API needed */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Roboto', sans-serif;
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #90a4ae; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #546e7a; }
+
+.mat-mdc-card { box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; }
+.mat-mdc-raised-button { border-radius: 8px !important; }
+.mat-mdc-chip { border-radius: 6px !important; font-size: 12px !important; }

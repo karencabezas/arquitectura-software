@@ -1,0 +1,105 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Auth Service — público
+        - id: auth-service
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=0
+
+        # Emergency Service
+        - id: emergency-service
+          uri: http://emergency-service:8082
+          predicates:
+            - Path=/emergencies/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        # Drone Service
+        - id: drone-service
+          uri: http://drone-service:8083
+          predicates:
+            - Path=/drones/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        # Mission Service
+        - id: mission-service
+          uri: http://mission-service:8084
+          predicates:
+            - Path=/missions/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        # Alert Service
+        - id: alert-service
+          uri: http://alert-service:8085
+          predicates:
+            - Path=/alerts/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+        # Notification WebSocket
+        - id: notification-service
+          uri: http://notification-service:8086
+          predicates:
+            - Path=/ws/**
+          filters:
+            - StripPrefix=0
+
+        # Audit Service
+        - id: audit-service
+          uri: http://audit-service:8087
+          predicates:
+            - Path=/audit/**
+          filters:
+            - StripPrefix=0
+            - name: JwtAuthFilter
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+jwt:
+  public-key-path: classpath:certs/public.pem
+
+# RBAC: roles permitidos por prefijo de path
+rbac:
+  rules:
+    - path: /emergencies
+      methods: [POST]
+      allowed-roles: [ADMIN, SUPERVISOR, OPERATOR]
+    - path: /emergencies
+      methods: [GET]
+      allowed-roles: [ADMIN, SUPERVISOR, OPERATOR, VIEWER]
+    - path: /drones
+      methods: [POST]
+      allowed-roles: [ADMIN, DRONE_TECH]
+    - path: /drones
+      methods: [GET]
+      allowed-roles: [ADMIN, SUPERVISOR, OPERATOR, DRONE_TECH, VIEWER]
+    - path: /missions
+      methods: [GET, POST]
+      allowed-roles: [ADMIN, SUPERVISOR, OPERATOR]
+    - path: /alerts
+      methods: [GET]
+      allowed-roles: [ADMIN, SUPERVISOR, OPERATOR, VIEWER]
+    - path: /audit
+      methods: [GET]
+      allowed-roles: [ADMIN, SUPERVISOR]

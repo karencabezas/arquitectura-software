@@ -1,0 +1,385 @@
+networks:
+  aerorescue-net:
+    driver: bridge
+
+volumes:
+  auth-db-data:
+  emergency-db-data:
+  drone-db-data:
+  mission-db-data:
+  alert-db-data:
+  audit-db-data:
+  kafka-data:
+
+services:
+
+  # ══════════════════════════════════════════════════
+  # INFRASTRUCTURE
+  # ══════════════════════════════════════════════════
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: aerorescue-zookeeper
+    networks: [aerorescue-net]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: aerorescue-kafka
+    networks: [aerorescue-net]
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9092 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: aerorescue-kafka-ui
+    networks: [aerorescue-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: aerorescue
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+  # ── Databases ───────────────────────────────────────
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: aerorescue-auth-db
+    networks: [aerorescue-net]
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authuser -d authdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  emergency-db:
+    image: postgres:15-alpine
+    container_name: aerorescue-emergency-db
+    networks: [aerorescue-net]
+    volumes:
+      - emergency-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: emergencydb
+      POSTGRES_USER: emergencyuser
+      POSTGRES_PASSWORD: emergencypass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U emergencyuser -d emergencydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  drone-db:
+    image: postgres:15-alpine
+    container_name: aerorescue-drone-db
+    networks: [aerorescue-net]
+    volumes:
+      - drone-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: dronedb
+      POSTGRES_USER: droneuser
+      POSTGRES_PASSWORD: dronepass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U droneuser -d dronedb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mission-db:
+    image: postgres:15-alpine
+    container_name: aerorescue-mission-db
+    networks: [aerorescue-net]
+    volumes:
+      - mission-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: missiondb
+      POSTGRES_USER: missionuser
+      POSTGRES_PASSWORD: missionpass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U missionuser -d missiondb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # alert-db:
+    # image: postgres:15-alpine
+    # container_name: aerorescue-alert-db
+    # networks: [aerorescue-net]
+    # volumes:
+      # - alert-db-data:/var/lib/postgresql/data
+    # environment:
+      # POSTGRES_DB: alertdb
+      # POSTGRES_USER: alertuser
+      # POSTGRES_PASSWORD: alertpass
+    # healthcheck:
+      # test: ["CMD-SHELL", "pg_isready -U alertuser -d alertdb"]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+
+  # audit-db:
+    # image: postgres:15-alpine
+    # container_name: aerorescue-audit-db
+    # networks: [aerorescue-net]
+    # volumes:
+      # - audit-db-data:/var/lib/postgresql/data
+    # environment:
+      # POSTGRES_DB: auditdb
+      # POSTGRES_USER: audituser
+      # POSTGRES_PASSWORD: auditpass
+    # healthcheck:
+      # test: ["CMD-SHELL", "pg_isready -U audituser -d auditdb"]
+      # interval: 10s
+      # timeout: 5s
+      # retries: 5
+
+  # ══════════════════════════════════════════════════
+  # MICROSERVICES
+  # ══════════════════════════════════════════════════
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: aerorescue-auth-service
+    networks: [aerorescue-net]
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
+      SPRING_DATASOURCE_USERNAME: authuser
+      SPRING_DATASOURCE_PASSWORD: authpass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_PRIVATE_KEY_PATH: classpath:certs/private.pem
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+      JWT_ACCESS_TOKEN_EXPIRATION_MINUTES: 15
+      JWT_REFRESH_TOKEN_EXPIRATION_HOURS: 8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 150s
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: aerorescue-api-gateway
+    networks: [aerorescue-net]
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+    restart: unless-stopped
+
+  emergency-service:
+    build:
+      context: .
+      dockerfile: emergency-service/Dockerfile
+    container_name: aerorescue-emergency-service
+    networks: [aerorescue-net]
+    depends_on:
+      emergency-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://emergency-db:5432/emergencydb
+      SPRING_DATASOURCE_USERNAME: emergencyuser
+      SPRING_DATASOURCE_PASSWORD: emergencypass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8082 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 150s
+
+  drone-service:
+    build:
+      context: .
+      dockerfile: drone-service/Dockerfile
+    container_name: aerorescue-drone-service
+    networks: [aerorescue-net]
+    depends_on:
+      drone-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://drone-db:5432/dronedb
+      SPRING_DATASOURCE_USERNAME: droneuser
+      SPRING_DATASOURCE_PASSWORD: dronepass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+      DRONE_HEARTBEAT_WARNING_THRESHOLD_SECONDS: 15
+      DRONE_HEARTBEAT_OFFLINE_THRESHOLD_SECONDS: 999
+      DRONE_HEARTBEAT_CHECK_INTERVAL_MS: 5000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8083 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 150s
+
+  mission-service:
+    build:
+      context: .
+      dockerfile: mission-service/Dockerfile
+    container_name: aerorescue-mission-service
+    networks: [aerorescue-net]
+    depends_on:
+      mission-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://mission-db:5432/missiondb
+      SPRING_DATASOURCE_USERNAME: missionuser
+      SPRING_DATASOURCE_PASSWORD: missionpass
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+      MISSION_UNATTENDED_TIMEOUT_CRITICAL: 5
+      MISSION_UNATTENDED_TIMEOUT_HIGH: 15
+      MISSION_UNATTENDED_TIMEOUT_MEDIUM: 30
+      MISSION_UNATTENDED_TIMEOUT_LOW: 60
+      DRONE_SELECTION_WEIGHTS_BATTERY: 0.35
+      DRONE_SELECTION_WEIGHTS_DISTANCE: 0.30
+      DRONE_SELECTION_WEIGHTS_MISSION_TYPE: 0.25
+      DRONE_SELECTION_WEIGHTS_AVAILABILITY: 0.10
+      DRONE_SELECTION_MIN_SCORE: 40
+      DRONE_SELECTION_MAX_DISTANCE_KM: 50
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8084 || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 150s
+
+  # alert-service:
+    # build:
+      # context: .
+      # dockerfile: alert-service/Dockerfile
+    # container_name: aerorescue-alert-service
+    # networks: [aerorescue-net]
+    # depends_on:
+      # alert-db:
+        # condition: service_healthy
+      # kafka:
+        # condition: service_healthy
+    # ports:
+      # - "8085:8085"
+    # environment:
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://alert-db:5432/alertdb
+      # SPRING_DATASOURCE_USERNAME: alertuser
+      # SPRING_DATASOURCE_PASSWORD: alertpass
+      # SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+    # restart: unless-stopped
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: aerorescue-notification-service
+    networks: [aerorescue-net]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+    restart: unless-stopped
+
+  # audit-service:
+    # build:
+      # context: .
+      # dockerfile: audit-service/Dockerfile
+    # container_name: aerorescue-audit-service
+    # networks: [aerorescue-net]
+    # depends_on:
+      # audit-db:
+        # condition: service_healthy
+      # kafka:
+        # condition: service_healthy
+    # ports:
+      # - "8087:8087"
+    # environment:
+      # SPRING_DATASOURCE_URL: jdbc:postgresql://audit-db:5432/auditdb
+      # SPRING_DATASOURCE_USERNAME: audituser
+      # SPRING_DATASOURCE_PASSWORD: auditpass
+      # SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # JWT_PUBLIC_KEY_PATH: classpath:certs/public.pem
+    # restart: unless-stopped
+
+  # ══════════════════════════════════════════════════
+  # FRONTEND
+  # ══════════════════════════════════════════════════
+
+  frontend:
+    build:
+      context: ../aerorescue-frontend
+      dockerfile: Dockerfile
+    container_name: aerorescue-frontend
+    networks: [aerorescue-net]
+    depends_on:
+      - api-gateway
+      - notification-service
+    ports:
+      - "80:80"
+    restart: unless-stopped
